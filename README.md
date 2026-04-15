@@ -38,3 +38,18 @@ Copier `.env.example` puis renseigner:
 - Contact branché sur Resend
 - CTA contextuel blog -> contact prérempli
 - Base SQL: `portfolio_entries`, `blog_posts`, `contact_inquiries`
+
+## PostgreSQL via Docker Compose
+
+1. Copier `.env.example` vers `.env`.
+2. Lancer PostgreSQL:
+
+```bash
+docker compose -f compose.yml up -d
+```
+
+3. Vérifier l'état:
+
+```bash
+docker compose -f compose.yml ps
+```
