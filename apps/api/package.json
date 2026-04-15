@@ -1,0 +1,12 @@
+{
+  "name": "@silvus/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ./bin/server.js",
+    "build": "echo 'Build API with AdonisJS tooling'",
+    "start": "node ./bin/server.js",
+    "lint": "echo 'Configure eslint in API app'",
+    "typecheck": "echo 'Configure tsc in API app'"
+  }
+}
