@@ -1,0 +1,12 @@
+{
+  "name": "@silvus/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview --host 0.0.0.0 --port 4173",
+    "lint": "echo 'Configure eslint in web app'",
+    "typecheck": "echo 'Configure tsc in web app'"
+  }
+}
