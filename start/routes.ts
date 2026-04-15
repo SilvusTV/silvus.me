@@ -1,0 +1,21 @@
+import router from '@adonisjs/core/services/router'
+const PagesController = () => import('#controllers/http/pages_controller')
+const PortfolioController = () => import('#controllers/http/portfolio_controller')
+const BlogPostsController = () => import('#controllers/http/blog_posts_controller')
+const ContactInquiriesController = () => import('#controllers/http/contact_inquiries_controller')
+
+router.get('/', [PagesController, 'intro'])
+router.get('/portfolio', [PagesController, 'portfolio'])
+router.get('/journey', [PagesController, 'journey'])
+router.get('/blog', [PagesController, 'blogIndex'])
+router.get('/blog/:slug', [PagesController, 'blogShow'])
+router.get('/contact', [PagesController, 'contact'])
+router.get('/admin/blog', [PagesController, 'adminBlog'])
+
+router.get('/api/portfolio', [PortfolioController, 'index'])
+router.get('/api/journey', [PortfolioController, 'journey'])
+router.get('/api/blog', [BlogPostsController, 'index'])
+router.get('/api/blog/:slug', [BlogPostsController, 'show'])
+router.post('/api/contact', [ContactInquiriesController, 'store'])
+router.post('/api/admin/blog', [BlogPostsController, 'store'])
+router.patch('/api/admin/blog/:id', [BlogPostsController, 'update'])
