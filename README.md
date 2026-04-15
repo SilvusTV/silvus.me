@@ -1,71 +1,40 @@
 # silvus.me
 
-Monorepo pour un site personnel/portfolio orienté **développement** et **broadcast**.
+Projet **AdonisJS 7** unique (pas de sous-modules), avec **Inertia + React + Tailwind CSS**.
 
 ## Stack
 
-- **Backend**: AdonisJS (structure API + routes/controllers/validators)
-- **Frontend**: Inertia + React
-- **DB**: PostgreSQL
-- **Email**: Resend
-- **Monorepo**: npm workspaces
-
-## Structure
-
-```text
-apps/
-  api/
-    app/
-    config/
-    database/
-    start/
-  web/
-    src/
-    vite.config.ts
-
-db/
-  schema.sql
-
-docs/
-  product-brief.md
-  architecture.md
-```
-
-## Fonctionnalités livrées (MVP)
-
-- Pages Intro, Portfolio, Parcours, Blog index, Blog détail, Contact, Admin blog.
-- API endpoints pour portfolio, parcours, blog, contact, admin blog.
-- Formulaire de contact branché sur Resend (appel HTTP API Resend).
-- CTA contextuel en bas d’article blog vers `/contact` prérempli.
-- Schéma SQL initial pour portfolio/blog/contact.
-
-## Variables d’environnement
-
-Copier `.env.example` et renseigner:
-
-- `DATABASE_URL`
-- `RESEND_API_KEY`
-- `RESEND_FROM`
-- `RESEND_TO`
-- `VITE_API_BASE_URL`
+- Backend + routing + API: AdonisJS 7
+- UI SSR/hydratation: Inertia + React
+- Style: Tailwind CSS
+- Base de données: PostgreSQL
+- Email: Resend
 
 ## Scripts
 
 ```bash
-# Développement complet (API + Web)
 npm run dev
-
-# Build production
 npm run build
-
-# Lancement production (API + Web preview)
 npm run start
-
-# Pipeline complet build + start
 npm run prod
-
 npm run lint
 npm run typecheck
 ```
 
-> L’environnement de cette tâche n’autorise pas l’installation npm des dépendances Adonis/React. Le code est prêt à être branché dès que l’accès registre est disponible.
+## Variables d’environnement
+
+Copier `.env.example` puis renseigner:
+
+- `APP_KEY`
+- `DATABASE_URL`
+- `RESEND_API_KEY`
+- `RESEND_FROM`
+- `RESEND_TO`
+
+## Fonctionnalités incluses
+
+- Pages Inertia: Intro, Portfolio, Journey, Blog index, Blog show, Contact, Admin Blog
+- Endpoints API: portfolio, journey, blog, contact, admin blog
+- Contact branché sur Resend
+- CTA contextuel blog -> contact prérempli
+- Base SQL: `portfolio_entries`, `blog_posts`, `contact_inquiries`

@@ -1,71 +1,37 @@
-# Architecture cible (proposition)
+# Architecture cible (AdonisJS 7 unique)
 
-## Monorepo
+## Principe
+
+Le projet est maintenant un **seul app AdonisJS 7** (pas de sous-modules). Inertia + React + Tailwind vivent dans la même codebase.
+
+## Structure
 
 ```text
-/apps
-  /web            # UI React + Inertia pages
-  /api            # AdonisJS backend
- /packages
-  /ui             # composants partagés (optionnel)
-  /config         # config partagée (eslint, tsconfig)
-/db
-  schema.sql
-/docs
-  product-brief.md
-  architecture.md
+app/
+  controllers/http/
+  services/
+  validators/
+start/
+  routes.ts
+inertia/
+  app.tsx
+  components/
+  pages/
+resources/
+  css/app.css
+config/
+  inertia.ts
+database/
+  migrations/
 ```
 
-## Backend (AdonisJS)
+## Flux applicatif
 
-Responsabilités :
+- Pages UI rendues via Inertia (`Intro`, `Portfolio`, `Journey`, `Blog`, `Contact`, `Admin Blog`).
+- Endpoints API Adonis pour portfolio/journey/blog/contact/admin.
+- Contact transmis via Resend.
+- CTA en bas d’article vers contact prérempli.
 
-- servir les pages Inertia,
-- exposer les endpoints JSON pour actions async,
-- gérer validation,
-- persister en base SQL,
-- orchestrer l’envoi d’emails via Resend,
-- alimenter le backoffice blog.
+## Styling
 
-## Frontend (Inertia + React)
-
-Responsabilités :
-
-- rendu des pages principales,
-- appels API via `fetch`,
-- états de chargement et erreurs explicites,
-- UI cohérente et lisible.
-
-## API (exemple de routes)
-
-- `GET /api/portfolio`
-- `GET /api/journey`
-- `GET /api/blog`
-- `GET /api/blog/:slug`
-- `POST /api/contact`
-- `POST /api/admin/blog`
-- `PATCH /api/admin/blog/:id`
-
-## Contact / Resend
-
-Flux recommandé :
-
-1. validation serveur,
-2. journalisation en DB (`contact_inquiries`),
-3. envoi via Resend,
-4. réponse utilisateur claire.
-
-## Blog + CTA contextuel
-
-Sur chaque article :
-
-- bouton “Me contacter à propos de ce projet”,
-- lien prérempli vers `/contact?source=blog&post=<slug>&subject=<title>`.
-
-## Design principles
-
-- composition simple,
-- rythme visuel respirant,
-- micro-interactions discrètes,
-- identité technique + live operations,
-- pas d’encombrement inutile.
+Tailwind est branché via `resources/css/app.css`, `tailwind.config.js`, `postcss.config.js` et `vite.config.ts`.
