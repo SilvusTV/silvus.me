@@ -5,4 +5,8 @@ node_modules
 dist
 build
 .tmp
+.adonisjs
+tmp
 .DS_Store
+.idea
+app/services/content_bootstrap_service.ts

@@ -10,22 +10,38 @@ type ContactPayload = {
 }
 
 export async function sendContactMessage(payload: ContactPayload) {
+  const apiKey = env.get('RESEND_API_KEY')
+  const from = env.get('RESEND_FROM')
+  const to = env.get('RESEND_TO')
+
+  if (!apiKey || !from || !to) {
+    throw new Error('Resend environment variables are missing')
+  }
+
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${env.get('RESEND_API_KEY')}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: env.get('RESEND_FROM'),
-      to: [env.get('RESEND_TO')],
+      from,
+      to: [to],
       subject: payload.subject || 'Nouveau message depuis silvus.me',
-      text: [`Nom: ${payload.name}`, `Email: ${payload.email}`, '', payload.message].join('\n')
+      text: [
+        `Nom: ${payload.name}`,
+        `Email: ${payload.email}`,
+        `Source: ${payload.sourcePage || 'contact'}`,
+        `Article lie: ${payload.relatedPostSlug || '-'}`,
+        '',
+        payload.message
+      ].join('\n')
     })
   })
 
   if (!response.ok) {
-    throw new Error(`Resend request failed (${response.status})`)
+    const body = await response.text()
+    throw new Error(`Resend request failed (${response.status}): ${body}`)
   }
 
   const body = (await response.json()) as { id: string }

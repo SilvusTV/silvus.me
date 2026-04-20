@@ -21,6 +21,20 @@ npm run lint
 npm run typecheck
 ```
 
+## Migrations (Adonis Lucid)
+
+Les tables sont definies avec des migrations Lucid TypeScript dans `database/migrations`.
+
+```bash
+node ace migration:run
+```
+
+Rollback:
+
+```bash
+node ace migration:rollback
+```
+
 ## Variables d’environnement
 
 Copier `.env.example` puis renseigner:
@@ -35,7 +49,9 @@ Copier `.env.example` puis renseigner:
 
 - Pages Inertia: Intro, Portfolio, Journey, Blog index, Blog show, Contact, Admin Blog
 - Endpoints API: portfolio, journey, blog, contact, admin blog
-- Contact branché sur Resend
+- Endpoints branchés sur PostgreSQL (plus d'état en mémoire)
+- Seed automatique du contenu initial si la base est vide
+- Contact branché sur Resend + log dans `contact_inquiries`
 - CTA contextuel blog -> contact prérempli
 - Base SQL: `portfolio_entries`, `blog_posts`, `contact_inquiries`
 

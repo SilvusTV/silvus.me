@@ -1,7 +1,98 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@import "tailwindcss";
+@source "../../inertia/**/*.{ts,tsx}";
+@source "../views/**/*.edge";
+
+:root {
+  --ink: #0f172a;
+  --muted: #475569;
+  --surface: rgba(255, 255, 255, 0.85);
+}
 
 body {
-  @apply bg-zinc-950 text-zinc-100;
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(190, 242, 255, 0.5), transparent 48%),
+    radial-gradient(circle at 85% 4%, rgba(211, 255, 222, 0.45), transparent 38%),
+    linear-gradient(170deg, #f8fafc, #f1f5f9 52%, #ecfeff);
+  min-height: 100vh;
+}
+
+code,
+.font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
+}
+
+a {
+  color: inherit;
+}
+
+.dark-action {
+  color: #f8fafc;
+}
+
+.dark-action:visited,
+.dark-action:active,
+.dark-action:hover,
+.dark-action:focus-visible {
+  color: #f8fafc;
+}
+
+::selection {
+  background: #bfdbfe;
+  color: #0f172a;
+}
+
+.portfolio-rich {
+  color: #334155;
+  line-height: 1.7;
+}
+
+.portfolio-rich h1,
+.portfolio-rich h2,
+.portfolio-rich h3 {
+  color: #0f172a;
+  line-height: 1.25;
+  margin-top: 1.2rem;
+  margin-bottom: 0.6rem;
+}
+
+.portfolio-rich p {
+  margin: 0.8rem 0;
+  white-space: pre-line;
+}
+
+.portfolio-rich ul,
+.portfolio-rich ol {
+  margin: 0.8rem 0 0.8rem 1.2rem;
+}
+
+.portfolio-rich li {
+  white-space: pre-line;
+}
+
+.portfolio-rich a {
+  text-decoration: underline;
+}
+
+.portfolio-rich figure {
+  margin: 1rem 0;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.9rem;
+  background: #f8fafc;
+}
+
+.portfolio-rich figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.portfolio-rich figcaption {
+  padding: 0.65rem 0.8rem;
+  font-size: 0.8rem;
+  color: #475569;
 }

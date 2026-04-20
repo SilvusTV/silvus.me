@@ -2,30 +2,47 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 export default class PagesController {
   intro({ inertia }: HttpContext) {
-    return inertia.render('Intro')
+    const renderer = inertia as any
+    return renderer.render('Intro', {})
   }
 
   portfolio({ inertia }: HttpContext) {
-    return inertia.render('Portfolio')
+    const renderer = inertia as any
+    return renderer.render('Portfolio', {})
+  }
+
+  portfolioShow({ inertia, params }: HttpContext) {
+    const renderer = inertia as any
+    return renderer.render('PortfolioDetail', { slug: params.slug })
   }
 
   journey({ inertia }: HttpContext) {
-    return inertia.render('Journey')
+    const renderer = inertia as any
+    return renderer.render('Journey', {})
   }
 
   blogIndex({ inertia }: HttpContext) {
-    return inertia.render('BlogIndex')
+    const renderer = inertia as any
+    return renderer.render('BlogIndex', {})
   }
 
   blogShow({ inertia, params }: HttpContext) {
-    return inertia.render('BlogShow', { slug: params.slug })
+    const renderer = inertia as any
+    return renderer.render('BlogShow', { slug: params.slug })
   }
 
   contact({ inertia }: HttpContext) {
-    return inertia.render('Contact')
+    const renderer = inertia as any
+    return renderer.render('Contact', {})
   }
 
   adminBlog({ inertia }: HttpContext) {
-    return inertia.render('AdminBlog')
+    const renderer = inertia as any
+    return renderer.render('AdminBlog', {})
+  }
+
+  adminPortfolio({ inertia }: HttpContext) {
+    const renderer = inertia as any
+    return renderer.render('AdminPortfolio', {})
   }
 }

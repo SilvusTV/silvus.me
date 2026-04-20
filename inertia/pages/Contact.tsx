@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { PageShell } from '../components/PageShell'
+import { apiSend } from '../lib/api'
 
 type ContactForm = {
   name: string
@@ -11,53 +12,103 @@ type ContactForm = {
 }
 
 export default function Contact() {
-  const query = useMemo(() => new URLSearchParams(window.location.search), [])
+  const query = useMemo(
+    () => new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search),
+    []
+  )
   const [status, setStatus] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState<ContactForm>({
     name: '',
     email: '',
     subject: query.get('subject') || '',
-    message: '',
+    message: query.get('post') ? `Bonjour, je te contacte au sujet de l article "${query.get('post')}".` : '',
     sourcePage: query.get('source') || 'contact',
     relatedPostSlug: query.get('post') || undefined
   })
 
-  async function onSubmit(event: React.FormEvent) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setSubmitting(true)
+    setStatus('')
 
-    const response = await fetch('/api/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    })
-
-    if (!response.ok) {
-      setStatus('Erreur pendant l’envoi. Réessaie dans un instant.')
-      return
+    try {
+      await apiSend('/api/contact', 'POST', form)
+      setStatus('Message envoye. Je reviens vers toi rapidement.')
+      setForm((current) => ({
+        ...current,
+        message: '',
+        subject: current.relatedPostSlug ? current.subject : ''
+      }))
+    } catch {
+      setStatus('Erreur pendant l envoi. Reessaie dans un instant.')
+    } finally {
+      setSubmitting(false)
     }
-
-    setStatus('Message envoyé. Je reviens vers toi rapidement.')
   }
 
   return (
     <PageShell>
-      <h1 className="mb-2 text-2xl font-semibold">Contact</h1>
-      <p className="mb-6 text-zinc-300">Besoin produit, live ou intégration custom ? Écris-moi ici.</p>
+      <section className="mb-6 grid gap-2">
+        <h1 className="text-3xl font-semibold text-slate-900">Contact</h1>
+        <p className="max-w-2xl text-slate-600">
+          Besoin produit, live ou integration custom. Donne-moi ton contexte, je te reponds rapidement.
+        </p>
+      </section>
 
-      <form onSubmit={onSubmit} className="grid max-w-xl gap-3">
-        <input className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2" placeholder="Nom" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
-        <input className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2" placeholder="Email" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required />
-        <input className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2" placeholder="Sujet" value={form.subject} onChange={(event) => setForm({ ...form, subject: event.target.value })} />
-        <textarea className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2" placeholder="Message" rows={6} value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} required />
-        <button className="rounded bg-zinc-100 px-4 py-2 text-zinc-900" type="submit">Envoyer</button>
+      <form onSubmit={onSubmit} className="grid max-w-2xl gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+        <input
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800"
+          placeholder="Nom"
+          value={form.name}
+          onChange={(event) => setForm({ ...form, name: event.target.value })}
+          required
+        />
+        <input
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800"
+          placeholder="Email"
+          type="email"
+          value={form.email}
+          onChange={(event) => setForm({ ...form, email: event.target.value })}
+          required
+        />
+        <input
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800"
+          placeholder="Sujet ou contexte (optionnel)"
+          value={form.subject}
+          onChange={(event) => setForm({ ...form, subject: event.target.value })}
+        />
+        <textarea
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800"
+          placeholder="Message"
+          rows={7}
+          value={form.message}
+          onChange={(event) => setForm({ ...form, message: event.target.value })}
+          required
+        />
+        <button className="dark-action w-fit rounded-full bg-slate-900 px-5 py-2 text-slate-50 disabled:opacity-60" disabled={submitting} type="submit">
+          {submitting ? 'Envoi...' : 'Envoyer'}
+        </button>
       </form>
 
-      {status ? <p className="mt-4 text-sm text-zinc-300">{status}</p> : null}
+      {status ? <p className="mt-4 text-sm text-slate-600">{status}</p> : null}
 
-      <ul className="mt-6 space-y-1 text-sm">
-        <li><a href="https://x.com" target="_blank" rel="noreferrer">Twitter / X</a></li>
-        <li><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a></li>
-        <li><a href="https://linkedin.com" target="_blank" rel="noreferrer">LinkedIn</a></li>
+      <ul className="mt-6 grid gap-2 text-sm text-slate-700">
+        <li>
+          <a className="underline" href="https://x.com/silvus_tv" target="_blank" rel="noreferrer">
+            Twitter / X
+          </a>
+        </li>
+        <li>
+          <a className="underline" href="https://www.instagram.com/silvus_tv/" target="_blank" rel="noreferrer">
+            Instagram
+          </a>
+        </li>
+        <li>
+          <a className="underline" href="https://www.linkedin.com/in/cmbhugo/" target="_blank" rel="noreferrer">
+            LinkedIn
+          </a>
+        </li>
       </ul>
     </PageShell>
   )
