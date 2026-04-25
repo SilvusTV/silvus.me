@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "node ace.js serve --hmr",
     "build": "node ace.js build",
-    "deploy": "npm run build -- --ignore-ts-errors && node -e \"require('fs').copyFileSync('.env', 'build/.env')\" && cd build && npm i --omit=dev",
+    "deploy": "npm run build -- --ignore-ts-errors && node -e \"require('fs').copyFileSync('.env', 'build/.env')\" && cd build && npm i --omit=dev && node ace migration:run --force",
     "start": "node build/server.js",
     "prod": "npm run build && npm run start",
     "migration:run": "node ace.js migration:run",
