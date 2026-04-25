@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import { useEffect, useState } from 'react'
 import { PageShell } from '../components/PageShell'
 import { apiGet } from '../lib/api'
@@ -45,6 +45,7 @@ export default function BlogIndex() {
 
   return (
     <PageShell>
+      <Head title="Blog" />
       <section className="mb-6 grid gap-3">
         <h1 className="text-3xl font-semibold text-slate-900">Blog</h1>
         <p className="max-w-2xl text-slate-600">

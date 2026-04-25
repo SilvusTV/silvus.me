@@ -354,11 +354,11 @@ export default function AdminPortfolio() {
 
         <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm">
           {!selected ? (
-            <p className="text-sm text-slate-600">Selectionne une fiche pour l editer.</p>
+            <p className="text-sm text-slate-600">Sélectionne une fiche pour l'éditer.</p>
           ) : (
             <div className="grid gap-4">
               <p className="text-sm text-slate-500">
-                Edition de <strong>{selected.title}</strong> ({selected.slug})
+                Édition de <strong>{selected.title}</strong> ({selected.slug})
               </p>
 
               <div className="grid gap-3 md:grid-cols-2">
@@ -396,7 +396,7 @@ export default function AdminPortfolio() {
               </label>
 
               <label className="grid gap-1">
-                <span className="text-sm text-slate-700">Resume court</span>
+                <span className="text-sm text-slate-700">Résumé court</span>
                 <textarea
                   rows={3}
                   className="rounded-xl border border-slate-300 px-3 py-2"
@@ -435,7 +435,7 @@ export default function AdminPortfolio() {
               </label>
 
               <label className="grid gap-1">
-                <span className="text-sm text-slate-700">Image d entete (URL)</span>
+                <span className="text-sm text-slate-700">Image de couverture (URL)</span>
                 <input
                   className="rounded-xl border border-slate-300 px-3 py-2"
                   value={coverImageUrl}
@@ -457,7 +457,7 @@ export default function AdminPortfolio() {
 
               <div className="grid gap-3 md:grid-cols-3">
                 <label className="grid gap-1">
-                  <span className="text-sm text-slate-700">Date de debut</span>
+                  <span className="text-sm text-slate-700">Date de début</span>
                   <input
                     type="date"
                     className="rounded-xl border border-slate-300 px-3 py-2"

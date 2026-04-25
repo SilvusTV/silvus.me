@@ -1,3 +1,4 @@
+import { Head } from '@inertiajs/react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { PageShell } from '../components/PageShell'
 import { apiSend } from '../lib/api'
@@ -49,6 +50,7 @@ export default function Contact() {
 
   return (
     <PageShell>
+      <Head title="Contact" />
       <section className="mb-6 grid gap-2">
         <h1 className="text-3xl font-semibold text-slate-900">Contact</h1>
         <p className="max-w-2xl text-slate-600">

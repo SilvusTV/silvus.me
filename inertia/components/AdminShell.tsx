@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react'
+import { Head, Link, usePage } from '@inertiajs/react'
 import type { PropsWithChildren } from 'react'
 import { PageShell } from './PageShell'
 import { apiSend } from '../lib/api'
@@ -22,6 +22,7 @@ export function AdminShell({ children }: PropsWithChildren) {
 
   return (
     <PageShell>
+      <Head title="ADMIN" />
       <section className="mb-6 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
@@ -46,7 +47,7 @@ export function AdminShell({ children }: PropsWithChildren) {
             onClick={logout}
             className="rounded-full border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
           >
-            Deconnexion
+            Déconnexion
           </button>
         </div>
       </section>

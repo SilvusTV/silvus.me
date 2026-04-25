@@ -17,8 +17,7 @@ type BlogPost = {
   }
   tags: string[]
   publishedAt: string | null
-  binanceSymbol: string | null
-  binanceEmbedUrl: string | null
+  behanceUrl: string | null
 }
 
 type BlogPayload = {
@@ -28,8 +27,7 @@ type BlogPayload = {
   content: string
   tags: string[]
   publishedAt?: string
-  binanceSymbol?: string
-  binanceEmbedUrl?: string
+  behanceUrl?: string
 }
 
 const emptyForm = {
@@ -43,8 +41,7 @@ const emptyForm = {
   result: '',
   tags: 'retour-experience',
   publishedAt: '',
-  binanceSymbol: '',
-  binanceEmbedUrl: '',
+  behanceUrl: '',
 }
 
 export default function AdminBlog() {
@@ -98,8 +95,7 @@ export default function AdminBlog() {
       result: selected.sections.result,
       tags: selected.tags.join(', '),
       publishedAt: toDatetimeLocal(selected.publishedAt),
-      binanceSymbol: selected.binanceSymbol || '',
-      binanceEmbedUrl: selected.binanceEmbedUrl || '',
+      behanceUrl: selected.behanceUrl || '',
     })
   }, [selected])
 
@@ -120,12 +116,12 @@ export default function AdminBlog() {
       if (isEditing && selected) {
         const response = await apiSend<{ data: BlogPost }>(`/api/admin/blog/${selected.id}`, 'PATCH', payload)
         setPosts((previous) => previous.map((post) => (post.id === response.data.id ? response.data : post)))
-        setStatus('Article mis a jour.')
+        setStatus('Article mis à jour.')
       } else {
         const response = await apiSend<{ data: BlogPost }>('/api/admin/blog', 'POST', payload)
         setPosts((previous) => [response.data, ...previous])
         setSelectedId(response.data.id)
-        setStatus('Article cree.')
+        setStatus('Article créé.')
       }
     } catch {
       setStatus('Operation impossible.')
@@ -146,7 +142,7 @@ export default function AdminBlog() {
       setPosts((previous) => previous.filter((post) => post.id !== selected.id))
       setSelectedId(null)
       setForm(emptyForm)
-      setStatus('Article supprime.')
+      setStatus('Article supprimé.')
     } catch {
       setStatus('Suppression impossible.')
     } finally {
@@ -186,7 +182,14 @@ export default function AdminBlog() {
                 ].join(' ')}
               >
                 <p className="text-sm font-medium">{post.title}</p>
-                <p className="text-xs opacity-80">{post.slug}</p>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="text-xs opacity-80">{post.slug}</p>
+                  {post.behanceUrl ? (
+                    <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                      Behance
+                    </span>
+                  ) : null}
+                </div>
               </button>
             ))}
           </div>
@@ -213,7 +216,7 @@ export default function AdminBlog() {
 
             <input
               className="rounded-xl border border-slate-300 px-3 py-2"
-              placeholder="Resume"
+              placeholder="Résumé"
               value={form.excerpt}
               onChange={(event) => setForm({ ...form, excerpt: event.target.value })}
               required
@@ -230,7 +233,7 @@ export default function AdminBlog() {
             <textarea
               className="rounded-xl border border-slate-300 px-3 py-2"
               rows={3}
-              placeholder="Ce que j ai fait"
+              placeholder="Ce que j'ai fait"
               value={form.what}
               onChange={(event) => setForm({ ...form, what: event.target.value })}
               required
@@ -254,7 +257,7 @@ export default function AdminBlog() {
             <textarea
               className="rounded-xl border border-slate-300 px-3 py-2"
               rows={4}
-              placeholder="Resultat"
+              placeholder="Résultat"
               value={form.result}
               onChange={(event) => setForm({ ...form, result: event.target.value })}
               required
@@ -262,7 +265,7 @@ export default function AdminBlog() {
 
             <input
               className="rounded-xl border border-slate-300 px-3 py-2"
-              placeholder="Tags (comma separated)"
+              placeholder="Tags (séparés par des virgules)"
               value={form.tags}
               onChange={(event) => setForm({ ...form, tags: event.target.value })}
             />
@@ -276,15 +279,9 @@ export default function AdminBlog() {
 
             <input
               className="rounded-xl border border-slate-300 px-3 py-2"
-              placeholder="Binance symbol (optional)"
-              value={form.binanceSymbol}
-              onChange={(event) => setForm({ ...form, binanceSymbol: event.target.value })}
-            />
-            <input
-              className="rounded-xl border border-slate-300 px-3 py-2"
-              placeholder="Binance embed URL (optional)"
-              value={form.binanceEmbedUrl}
-              onChange={(event) => setForm({ ...form, binanceEmbedUrl: event.target.value })}
+              placeholder="URL de galerie Behance (optionnel)"
+              value={form.behanceUrl}
+              onChange={(event) => setForm({ ...form, behanceUrl: event.target.value })}
             />
 
             <div className="flex flex-wrap gap-2">
@@ -293,17 +290,27 @@ export default function AdminBlog() {
                 disabled={submitting}
                 type="submit"
               >
-                {submitting ? 'Enregistrement...' : isEditing ? 'Mettre a jour' : 'Publier'}
+                {submitting ? 'Enregistrement...' : isEditing ? 'Mettre à jour' : 'Publier'}
               </button>
               {isEditing ? (
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={removeSelected}
-                  className="w-fit rounded-full border border-rose-300 px-5 py-2 text-rose-700 hover:bg-rose-50 disabled:opacity-60"
-                >
-                  Supprimer
-                </button>
+                <>
+                  <a
+                    href={`/blog/${selected?.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-fit rounded-full border border-slate-300 px-5 py-2 text-slate-700 hover:bg-slate-100"
+                  >
+                    Voir l'article
+                  </a>
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={removeSelected}
+                    className="w-fit rounded-full border border-rose-300 px-5 py-2 text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                  >
+                    Supprimer
+                  </button>
+                </>
               ) : null}
             </div>
           </form>
@@ -334,8 +341,7 @@ function buildPayload(form: typeof emptyForm): BlogPayload {
       .map((tag) => tag.trim())
       .filter(Boolean),
     publishedAt: publishedAt || undefined,
-    binanceSymbol: form.binanceSymbol || undefined,
-    binanceEmbedUrl: form.binanceEmbedUrl || undefined,
+    behanceUrl: form.behanceUrl || undefined,
   }
 }
 

@@ -1,9 +1,10 @@
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import { PageShell } from '../components/PageShell'
 
 export default function Intro() {
   return (
     <PageShell>
+      <Head title="Freelance Broadcast & Streaming Ops" />
       <section className="grid gap-6 rounded-3xl border border-slate-200/80 bg-white/90 p-8 shadow-sm">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
           Developpeur · Live Auditeur · Operateur vMix/OBS

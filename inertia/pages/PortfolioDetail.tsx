@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react'
+import { Head, Link, usePage } from '@inertiajs/react'
 import { useEffect, useState } from 'react'
 import { PageShell } from '../components/PageShell'
 import { apiGet } from '../lib/api'
@@ -68,6 +68,7 @@ export default function PortfolioDetail() {
 
   return (
     <PageShell>
+      {entry ? <Head title={entry.title} /> : null}
       <Link
         href="/portfolio"
         className="mb-4 inline-flex rounded-full border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-100"

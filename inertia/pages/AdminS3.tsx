@@ -85,7 +85,7 @@ export default function AdminS3() {
     const file = input?.files?.[0]
 
     if (!file) {
-      setStatus('Choisis un fichier a uploader.')
+      setStatus('Choisis un fichier à envoyer.')
       return
     }
 
@@ -103,10 +103,10 @@ export default function AdminS3() {
 
       await apiSendForm<{ data: S3File }>('/api/admin/s3/upload', 'POST', body)
       formElement.reset()
-      setStatus('Upload termine.')
+      setStatus('Envoi terminé.')
       await loadNodes(currentPrefix)
     } catch {
-      setStatus('Upload impossible.')
+      setStatus('Échec de l\'envoi.')
     } finally {
       setUploading(false)
     }
@@ -143,9 +143,9 @@ export default function AdminS3() {
         document.body.removeChild(area)
       }
 
-      setStatus('URL S3 copiee dans le presse-papiers.')
+      setStatus('URL S3 copiée dans le presse-papiers.')
     } catch {
-      setStatus('Impossible de copier l URL S3.')
+      setStatus('Impossible de copier l\'URL S3.')
     }
   }
 
@@ -170,7 +170,7 @@ export default function AdminS3() {
           <input className="rounded-xl border border-slate-300 px-3 py-2" type="file" name="file" required />
           <input
             className="rounded-xl border border-slate-300 px-3 py-2"
-            placeholder={currentPrefix ? `Dossier cible (defaut: ${currentPrefix})` : 'Dossier cible (optionnel)'}
+            placeholder={currentPrefix ? `Dossier cible (défaut: ${currentPrefix})` : 'Dossier cible (optionnel)'}
             value={uploadPrefix}
             onChange={(event) => setUploadPrefix(event.target.value)}
           />
@@ -179,7 +179,7 @@ export default function AdminS3() {
             disabled={uploading}
             className="dark-action w-fit rounded-full bg-slate-900 px-5 py-2 text-slate-50 disabled:opacity-60"
           >
-            {uploading ? 'Upload...' : 'Uploader'}
+            {uploading ? 'Envoi...' : 'Envoyer'}
           </button>
         </form>
       </section>

@@ -8,12 +8,10 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class BlogPostSchema extends BaseModel {
-  static $columns = ['binanceEmbedUrl', 'binanceSymbol', 'content', 'createdAt', 'excerpt', 'id', 'publishedAt', 'slug', 'tags', 'title', 'updatedAt'] as const
+  static $columns = ['behanceUrl', 'content', 'createdAt', 'excerpt', 'id', 'publishedAt', 'slug', 'tags', 'title', 'updatedAt'] as const
   $columns = BlogPostSchema.$columns
   @column()
-  declare binanceEmbedUrl: string | null
-  @column()
-  declare binanceSymbol: string | null
+  declare behanceUrl: string | null
   @column()
   declare content: string
   @column.dateTime({ autoCreate: true })

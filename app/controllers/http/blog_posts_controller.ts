@@ -15,8 +15,7 @@ type BlogRow = {
   content: string
   tags: string[] | null
   published_at: string | null
-  binance_symbol: string | null
-  binance_embed_url: string | null
+  behance_url: string | null
 }
 
 export default class BlogPostsController {
@@ -34,8 +33,7 @@ export default class BlogPostsController {
           content,
           tags,
           published_at::text,
-          binance_symbol,
-          binance_embed_url
+          behance_url
         from blog_posts
         order by published_at desc nulls last, created_at desc
         `
@@ -49,8 +47,7 @@ export default class BlogPostsController {
           excerpt: post.excerpt,
           tags: post.tags || [],
           publishedAt: post.published_at,
-          binanceSymbol: post.binance_symbol,
-          binanceEmbedUrl: post.binance_embed_url
+          behanceUrl: post.behance_url
         }))
       })
     } catch {
@@ -74,8 +71,7 @@ export default class BlogPostsController {
           content,
           tags,
           published_at::text,
-          binance_symbol,
-          binance_embed_url
+          behance_url
         from blog_posts
         where slug = $1
         limit 1
@@ -98,8 +94,7 @@ export default class BlogPostsController {
         sections: parseBlogSections(row.content),
         tags: row.tags || [],
         publishedAt: row.published_at,
-        binanceSymbol: row.binance_symbol,
-        binanceEmbedUrl: row.binance_embed_url,
+        behanceUrl: row.behance_url,
         contactCtaUrl: `/contact?source=blog&post=${row.slug}&subject=${encodeURIComponent(`A propos: ${row.title}`)}`
       })
     } catch {
@@ -123,8 +118,7 @@ export default class BlogPostsController {
           content,
           tags,
           published_at::text,
-          binance_symbol,
-          binance_embed_url
+          behance_url
         from blog_posts
         order by published_at desc nulls last, created_at desc
         `
@@ -140,8 +134,7 @@ export default class BlogPostsController {
           sections: parseBlogSections(post.content),
           tags: post.tags || [],
           publishedAt: post.published_at,
-          binanceSymbol: post.binance_symbol,
-          binanceEmbedUrl: post.binance_embed_url,
+          behanceUrl: post.behance_url,
         })),
       })
     } catch {
@@ -167,8 +160,7 @@ export default class BlogPostsController {
           content,
           tags,
           published_at,
-          binance_symbol,
-          binance_embed_url
+          behance_url
         ) values (
           $1,
           $2,
@@ -176,8 +168,7 @@ export default class BlogPostsController {
           $4,
           $5::jsonb,
           $6,
-          $7,
-          $8
+          $7
         )
         returning
           id,
@@ -187,8 +178,7 @@ export default class BlogPostsController {
           content,
           tags,
           published_at::text,
-          binance_symbol,
-          binance_embed_url
+          behance_url
         `,
         [
           payload.title,
@@ -197,8 +187,7 @@ export default class BlogPostsController {
           normalizedContent,
           JSON.stringify(normalizedTags),
           publishedAt,
-          payload.binanceSymbol || null,
-          payload.binanceEmbedUrl || null
+          payload.behanceUrl || null
         ]
       )
 
@@ -214,8 +203,7 @@ export default class BlogPostsController {
           sections: parseBlogSections(row.content),
           tags: row.tags || [],
           publishedAt: row.published_at,
-          binanceSymbol: row.binance_symbol,
-          binanceEmbedUrl: row.binance_embed_url
+          behanceUrl: row.behance_url
         }
       })
     } catch (error: any) {
@@ -258,14 +246,9 @@ export default class BlogPostsController {
       values.push(payload.publishedAt)
     }
 
-    if (payload.binanceSymbol !== undefined) {
-      updates.push(`binance_symbol = $${index++}`)
-      values.push(payload.binanceSymbol || null)
-    }
-
-    if (payload.binanceEmbedUrl !== undefined) {
-      updates.push(`binance_embed_url = $${index++}`)
-      values.push(payload.binanceEmbedUrl || null)
+    if (payload.behanceUrl !== undefined) {
+      updates.push(`behance_url = $${index++}`)
+      values.push(payload.behanceUrl || null)
     }
 
     if (updates.length === 0) {
@@ -288,8 +271,7 @@ export default class BlogPostsController {
           content,
           tags,
           published_at::text,
-          binance_symbol,
-          binance_embed_url
+          behance_url
         `,
         values
       )
@@ -310,8 +292,7 @@ export default class BlogPostsController {
           sections: parseBlogSections(row.content),
           tags: row.tags || [],
           publishedAt: row.published_at,
-          binanceSymbol: row.binance_symbol,
-          binanceEmbedUrl: row.binance_embed_url
+          behanceUrl: row.behance_url
         }
       })
     } catch {

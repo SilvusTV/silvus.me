@@ -1,3 +1,4 @@
+import { Head } from '@inertiajs/react'
 import { useEffect, useState } from 'react'
 import { PageShell } from '../components/PageShell'
 import { apiGet } from '../lib/api'
@@ -35,6 +36,7 @@ export default function Journey() {
 
   return (
     <PageShell>
+      <Head title="Parcours" />
       <h1 className="mb-3 text-3xl font-semibold text-slate-900">Parcours</h1>
       {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700">{error}</p> : null}
 

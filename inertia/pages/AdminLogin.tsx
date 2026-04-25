@@ -1,3 +1,4 @@
+import { Head } from '@inertiajs/react'
 import { useState, type FormEvent } from 'react'
 import { PageShell } from '../components/PageShell'
 import { ApiError, apiSend } from '../lib/api'
@@ -29,6 +30,7 @@ export default function AdminLogin() {
 
   return (
     <PageShell>
+      <Head title="CONNEXION ADMIN" />
       <section className="mx-auto max-w-md rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-sm">
         <h1 className="text-2xl font-semibold text-slate-900">Connexion Backoffice</h1>
         <p className="mt-2 text-sm text-slate-600">Acces reserve au compte configure dans les variables d environnement.</p>
