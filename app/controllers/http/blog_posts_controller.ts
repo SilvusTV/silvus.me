@@ -109,6 +109,48 @@ export default class BlogPostsController {
     }
   }
 
+  async adminIndex({ response }: HttpContext) {
+    try {
+      await ensureBaseContent()
+
+      const posts = await sql<BlogRow>(
+        `
+        select
+          id,
+          title,
+          slug,
+          excerpt,
+          content,
+          tags,
+          published_at::text,
+          binance_symbol,
+          binance_embed_url
+        from blog_posts
+        order by published_at desc nulls last, created_at desc
+        `
+      )
+
+      return response.ok({
+        data: posts.rows.map((post: BlogRow) => ({
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          excerpt: post.excerpt,
+          content: post.content,
+          sections: parseBlogSections(post.content),
+          tags: post.tags || [],
+          publishedAt: post.published_at,
+          binanceSymbol: post.binance_symbol,
+          binanceEmbedUrl: post.binance_embed_url,
+        })),
+      })
+    } catch {
+      return response.internalServerError({
+        message: 'Impossible de charger les articles admin.',
+      })
+    }
+  }
+
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createBlogPostValidator)
     const normalizedContent = normalizeContent(payload.content)
@@ -274,6 +316,27 @@ export default class BlogPostsController {
       })
     } catch {
       return response.internalServerError({ message: 'Mise a jour impossible.' })
+    }
+  }
+
+  async destroy({ response, params }: HttpContext) {
+    try {
+      const result = await sql<{ id: number }>(
+        `
+        delete from blog_posts
+        where id = $1
+        returning id
+        `,
+        [Number(params.id)]
+      )
+
+      if (!result.rows[0]) {
+        return response.notFound({ message: 'Article introuvable' })
+      }
+
+      return response.ok({ deleted: true })
+    } catch {
+      return response.internalServerError({ message: 'Suppression impossible.' })
     }
   }
 }

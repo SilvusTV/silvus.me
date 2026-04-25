@@ -36,6 +36,16 @@ export default class PagesController {
     return renderer.render('Contact', {})
   }
 
+  adminLogin({ inertia }: HttpContext) {
+    const renderer = inertia as any
+    return renderer.render('AdminLogin', {})
+  }
+
+  adminHome({ inertia }: HttpContext) {
+    const renderer = inertia as any
+    return renderer.render('AdminHome', {})
+  }
+
   adminBlog({ inertia }: HttpContext) {
     const renderer = inertia as any
     return renderer.render('AdminBlog', {})
@@ -44,5 +54,10 @@ export default class PagesController {
   adminPortfolio({ inertia }: HttpContext) {
     const renderer = inertia as any
     return renderer.render('AdminPortfolio', {})
+  }
+
+  adminS3({ inertia }: HttpContext) {
+    const renderer = inertia as any
+    return renderer.render('AdminS3', {})
   }
 }

@@ -148,6 +148,8 @@ export default class PortfolioController {
 
   async adminIndex({ response }: HttpContext) {
     try {
+      await ensureBaseContent()
+
       const result = await sql<PortfolioRow>(
         `
         select

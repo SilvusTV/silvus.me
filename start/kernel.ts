@@ -12,4 +12,6 @@ server.use([
 
 router.use([() => import('@adonisjs/core/bodyparser_middleware')])
 
-export const middleware = router.named({})
+export const middleware = router.named({
+  adminAuth: () => import('#middleware/admin_auth_middleware'),
+})

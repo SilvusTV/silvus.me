@@ -5,12 +5,14 @@ export default function Intro() {
   return (
     <PageShell>
       <section className="grid gap-6 rounded-3xl border border-slate-200/80 bg-white/90 p-8 shadow-sm">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Developpeur + Broadcast Ops</p>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
+          Developpeur · Live Auditeur · Operateur vMix/OBS
+        </p>
         <p className="text-sm text-slate-600">
           Hugo Combe · 23 ans
         </p>
         <h1 className="max-w-4xl text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
-          Je transforme des productions live complexes en systemes fiables, lisibles et exploitables en direct.
+          Je rends le live fiable, lisible et exploitable.
         </h1>
         <p className="max-w-3xl text-slate-600">
           J’interviens entre technique et operationnel: setup stream, outillage sur mesure, support en conditions
@@ -47,18 +49,20 @@ export default function Intro() {
 
       <section className="mt-6 grid gap-4 rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm sm:grid-cols-[1.35fr_1fr]">
         <div className="grid gap-3">
-          <h2 className="text-2xl font-semibold text-slate-900">Placeholder Hero a personnaliser</h2>
+          <h2 className="text-2xl font-semibold text-slate-900">Terrain: regie, production, execution</h2>
           <p className="text-slate-600">
-            Place ici une image forte qui te represente en production. C’est la premiere impression de ton profil.
+            Cette image represente ma facon de travailler: operationnel, reactivite, et exigence technique pour garder
+            un live propre du debut a la fin.
           </p>
           <p className="text-sm text-slate-500">
-            Recommande: photo en regie / backstage event, plan large setup, ou capture d’un dashboard live en action.
+            J’interviens sur le setup, la supervision, le cadrage et la coordination technique pour que les equipes et
+            les talents restent focuses sur le contenu.
           </p>
         </div>
         <figure className="overflow-hidden rounded-2xl border border-slate-200">
           <img
-            src="https://placehold.co/1280x720/e2e8f0/334155?text=Ton+visuel+hero+%28regie+live+ou+setup+event%29"
-            alt="Placeholder hero"
+            src="http://127.0.0.1:9000/silvus-assets/static/index-hero_personnal.png"
+            alt="Hero Hugo Combe"
             className="h-full w-full object-cover"
           />
         </figure>
@@ -77,12 +81,6 @@ export default function Intro() {
             Moins d’imprevus, meilleure coordination, et une diffusion qui reste propre du top depart au clap de fin.
           </p>
         </article>
-      </section>
-      <section className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 text-sm text-slate-600 shadow-sm">
-        <p className="font-medium text-slate-900">A remplacer des que possible:</p>
-        <p>1. Une photo portrait en situation (live/event).</p>
-        <p>2. Une capture de regie ou de dashboard d’outil interne.</p>
-        <p>3. Une image “ambiance event” avec ecrans/setup visibles.</p>
       </section>
     </PageShell>
   )

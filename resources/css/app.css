@@ -96,3 +96,41 @@ a {
   font-size: 0.8rem;
   color: #475569;
 }
+
+.portfolio-rich .portfolio-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.9rem;
+}
+
+.portfolio-rich .portfolio-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.portfolio-rich .portfolio-media-credit {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  transform: translateY(-0.65rem);
+}
+
+.portfolio-rich .portfolio-media-credit a {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.72rem;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+}
+
+.portfolio-rich .portfolio-media[data-source-type='external'] .portfolio-media-credit a {
+  background: rgba(120, 53, 15, 0.72);
+}
