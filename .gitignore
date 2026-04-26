@@ -9,4 +9,3 @@ build
 tmp
 .DS_Store
 .idea
-app/services/content_bootstrap_service.ts

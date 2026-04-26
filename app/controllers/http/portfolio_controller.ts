@@ -1,5 +1,4 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { ensureBaseContent } from '#services/content_bootstrap_service'
 import { sql } from '#services/db_service'
 import { updatePortfolioEntryValidator } from '#validators/portfolio_entry_validator'
 
@@ -70,7 +69,6 @@ const journey = {
 export default class PortfolioController {
   async index({ response }: HttpContext) {
     try {
-      await ensureBaseContent()
 
       const result = await sql<PortfolioRow>(
         `
@@ -106,7 +104,6 @@ export default class PortfolioController {
 
   async show({ response, params }: HttpContext) {
     try {
-      await ensureBaseContent()
 
       const result = await sql<PortfolioRow>(
         `
@@ -148,7 +145,6 @@ export default class PortfolioController {
 
   async adminIndex({ response }: HttpContext) {
     try {
-      await ensureBaseContent()
 
       const result = await sql<PortfolioRow>(
         `

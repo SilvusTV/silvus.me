@@ -60,7 +60,6 @@ Copier `.env.example` puis renseigner:
 - Pages Inertia: Intro, Portfolio, Journey, Blog index/show, Contact, Backoffice admin
 - Endpoints API: portfolio, journey, blog, contact, admin (auth + blog + portfolio + s3)
 - Endpoints branchés sur PostgreSQL (plus d'état en mémoire)
-- Seed automatique du contenu initial si la base est vide
 - Contact branché sur Resend + log dans `contact_inquiries`
 - CTA contextuel blog -> contact prérempli
 - Base SQL: `portfolio_entries`, `blog_posts`, `contact_inquiries`

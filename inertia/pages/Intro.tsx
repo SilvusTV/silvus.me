@@ -1,7 +1,10 @@
-import { Head, Link } from '@inertiajs/react'
+import { Head, Link, usePage } from '@inertiajs/react'
 import { PageShell } from '../components/PageShell'
 
 export default function Intro() {
+  const { s3Config } = usePage().props as any
+  const heroImageUrl = `${s3Config.publicUrl}/${s3Config.bucket}/static/index-hero_personnal.png`
+
   return (
     <PageShell>
       <Head title="Freelance Broadcast & Streaming Ops" />
@@ -62,7 +65,7 @@ export default function Intro() {
         </div>
         <figure className="overflow-hidden rounded-2xl border border-slate-200">
           <img
-            src="http://127.0.0.1:9000/silvus-assets/static/index-hero_personnal.png"
+            src={heroImageUrl}
             alt="Hero Hugo Combe"
             className="h-full w-full object-cover"
           />

@@ -1,9 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import {
-  ensureBaseContent,
   parseBlogSections,
   serializeBlogSections
-} from '#services/content_bootstrap_service'
+} from '#services/blog_content_service'
 import { sql } from '#services/db_service'
 import { createBlogPostValidator, updateBlogPostValidator } from '#validators/blog_post_validator'
 
@@ -21,7 +20,6 @@ type BlogRow = {
 export default class BlogPostsController {
   async index({ response }: HttpContext) {
     try {
-      await ensureBaseContent()
 
       const posts = await sql<BlogRow>(
         `
@@ -59,7 +57,6 @@ export default class BlogPostsController {
 
   async show({ response, params }: HttpContext) {
     try {
-      await ensureBaseContent()
 
       const post = await sql<BlogRow>(
         `
@@ -106,7 +103,6 @@ export default class BlogPostsController {
 
   async adminIndex({ response }: HttpContext) {
     try {
-      await ensureBaseContent()
 
       const posts = await sql<BlogRow>(
         `
