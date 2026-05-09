@@ -1,4 +1,36 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type ChangeEvent,
+  type ComponentType,
+  type DragEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react'
+import {
+  Bold,
+  Code2,
+  Eraser,
+  FolderOpen,
+  Heading2,
+  Heading3,
+  ImagePlus,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  LoaderCircle,
+  Minus,
+  Pilcrow,
+  Quote,
+  Redo2,
+  Underline,
+  Undo2,
+  Upload,
+} from 'lucide-react'
 import { AdminShell } from '../components/AdminShell'
 import { apiGet, apiSend, apiSendForm } from '../lib/api'
 
@@ -19,6 +51,29 @@ type Entry = {
   startDate?: string | null
   endDate?: string | null
   highlighted: boolean
+}
+
+type S3File = {
+  key: string
+  size: number
+  etag: string
+  lastModified: string | null
+  url: string
+}
+
+type S3NodesResponse = {
+  prefix: string
+  folders: Array<{ key: string; name: string }>
+  files: S3File[]
+}
+
+type ToolbarButtonProps = {
+  label: string
+  icon: ComponentType<{ className?: string }>
+  onMouseDown: (event: MouseEvent<HTMLButtonElement>) => void
+  onClick: () => void
+  disabled?: boolean
+  iconClassName?: string
 }
 
 function linksToText(items: LinkItem[]): string {
@@ -87,6 +142,12 @@ export default function AdminPortfolio() {
   const [externalCreditText, setExternalCreditText] = useState('')
   const [externalCreditUrl, setExternalCreditUrl] = useState('')
   const [imageError, setImageError] = useState('')
+  const [s3LibraryOpen, setS3LibraryOpen] = useState(false)
+  const [s3LibraryPrefix, setS3LibraryPrefix] = useState('portfolio/')
+  const [s3LibraryFiles, setS3LibraryFiles] = useState<S3File[]>([])
+  const [s3LibraryLoading, setS3LibraryLoading] = useState(false)
+  const [s3LibraryError, setS3LibraryError] = useState('')
+  const [cleanupRemovedS3Images, setCleanupRemovedS3Images] = useState(true)
 
   const editorRef = useRef<HTMLDivElement | null>(null)
   const imageInputRef = useRef<HTMLInputElement | null>(null)
@@ -120,6 +181,8 @@ export default function AdminPortfolio() {
   useEffect(() => {
     if (!selected) return
 
+    const nextDetailsHtml = selected.detailsHtml || ''
+
     setType(selected.type)
     setSlug(selected.slug || '')
     setTitle(selected.title || '')
@@ -129,22 +192,173 @@ export default function AdminPortfolio() {
     setImpactMetricsText(metricsToText(selected.impactMetrics || {}))
     setCoverImageUrl(selected.coverImageUrl || '')
     setLinksText(linksToText(selected.externalLinks || []))
-    setDetailsHtml(selected.detailsHtml || '')
+    setDetailsHtml(nextDetailsHtml)
     setStartDate(selected.startDate || '')
     setEndDate(selected.endDate || '')
     setHighlighted(Boolean(selected.highlighted))
+    if (editorRef.current) {
+      editorRef.current.innerHTML = nextDetailsHtml
+    }
+    savedSelectionRef.current = null
   }, [selected])
 
-  useEffect(() => {
-    if (!editorRef.current) return
-    editorRef.current.innerHTML = detailsHtml
-  }, [detailsHtml, selectedId])
+  function preventToolbarMouseDown(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    captureEditorSelection()
+  }
 
-  function runCommand(command: string) {
+  async function loadS3Library(prefix: string) {
+    const normalizedPrefix = normalizePrefix(prefix)
+    setS3LibraryPrefix(normalizedPrefix)
+    setS3LibraryLoading(true)
+    setS3LibraryError('')
+
+    try {
+      const payload = await apiGet<S3NodesResponse>(
+        `/api/admin/s3/objects?prefix=${encodeURIComponent(normalizedPrefix)}`
+      )
+      setS3LibraryFiles(payload.files.filter((file) => isImageFile(file.key)))
+    } catch {
+      setS3LibraryError('Impossible de charger les images S3.')
+    } finally {
+      setS3LibraryLoading(false)
+    }
+  }
+
+  function openS3Library() {
+    if (!selected) return
+    captureEditorSelection()
+    setS3LibraryOpen(true)
+    void loadS3Library(`portfolio/${sanitizeKeySegment(slug || selected.slug)}`)
+  }
+
+  function insertExistingS3Image(file: S3File) {
+    const alt = window.prompt('Texte alternatif (alt)') || file.key.split('/').pop() || 'image'
+    const creditUrl = file.url
+    const creditLabel = `S3 / ${file.key}`
+    insertHtml(buildImageFigureHtml(file.url, alt, creditUrl, creditLabel, 's3'))
+    setStatus('Image S3 inseree depuis la bibliotheque.')
+    setS3LibraryOpen(false)
+    setS3LibraryError('')
+  }
+
+  function refreshS3Library() {
+    void loadS3Library(s3LibraryPrefix)
+  }
+
+  function runCommand(command: string, value?: string) {
+    if (!editorRef.current) return
+    restoreEditorSelection()
+    editorRef.current.focus()
+    document.execCommand(command, false, value)
+    setDetailsHtml(editorRef.current.innerHTML)
+    captureEditorSelection()
+  }
+
+  function insertHorizontalRule() {
+    insertHtml('<hr />')
+  }
+
+  function clearFormatting() {
+    runCommand('removeFormat')
+    runCommand('unlink')
+  }
+
+  function setParagraphFormat(tagName: 'p' | 'h2' | 'h3' | 'blockquote' | 'pre') {
+    runCommand('formatBlock', `<${tagName}>`)
+  }
+
+  function updateDetailsHtml() {
+    if (!editorRef.current) return
+    setDetailsHtml(editorRef.current.innerHTML)
+    captureEditorSelection()
+  }
+
+  function focusEditor() {
     if (!editorRef.current) return
     editorRef.current.focus()
-    document.execCommand(command)
+    captureEditorSelection()
+  }
+
+  function onEditorPaste(event: ClipboardEvent<HTMLDivElement>) {
+    event.preventDefault()
+    const text = event.clipboardData.getData('text/plain')
+    document.execCommand('insertText', false, text)
+    updateDetailsHtml()
+  }
+
+  function onEditorKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'Tab') return
+    event.preventDefault()
+    document.execCommand('insertHTML', false, '&emsp;')
+    updateDetailsHtml()
+  }
+
+  function onEditorDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+  }
+
+  function onEditorDragOver(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+  }
+
+  function onEditorMouseUp() {
+    captureEditorSelection()
+  }
+
+  function onEditorKeyUp() {
+    captureEditorSelection()
+  }
+
+  function onEditorBlur() {
+    if (!editorRef.current) return
     setDetailsHtml(editorRef.current.innerHTML)
+  }
+
+  function onEditorInput(event: FormEvent<HTMLDivElement>) {
+    setDetailsHtml((event.target as HTMLDivElement).innerHTML)
+  }
+
+  function onS3LibraryPrefixChange(value: string) {
+    setS3LibraryPrefix(value)
+  }
+
+  function closeS3Library() {
+    setS3LibraryOpen(false)
+    setS3LibraryError('')
+    focusEditor()
+  }
+
+  function onS3LibrarySubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    refreshS3Library()
+  }
+
+  function onCleanupRemovedS3ImagesChange(event: ChangeEvent<HTMLInputElement>) {
+    setCleanupRemovedS3Images(event.target.checked)
+  }
+
+  function formatS3FileDate(value: string | null): string {
+    if (!value) return '-'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return '-'
+    return date.toLocaleString('fr-FR')
+  }
+
+  function formatS3FileSize(size: number): string {
+    if (!Number.isFinite(size) || size <= 0) return '0 B'
+    const units = ['B', 'KB', 'MB', 'GB']
+    let current = size
+    let index = 0
+    while (current >= 1024 && index < units.length - 1) {
+      current /= 1024
+      index += 1
+    }
+    return `${current.toFixed(index === 0 ? 0 : 1)} ${units[index]}`
+  }
+
+  function isImageFile(key: string): boolean {
+    return /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(key)
   }
 
   function addLink() {
@@ -289,6 +503,7 @@ export default function AdminPortfolio() {
 
     setSubmitting(true)
     setStatus('')
+    const currentDetailsHtml = editorRef.current?.innerHTML || detailsHtml
 
     try {
       const payload = await apiSend<{ entry: Entry }>(`/api/admin/portfolio/${selected.id}`, 'PATCH', {
@@ -303,11 +518,12 @@ export default function AdminPortfolio() {
           .filter(Boolean),
         impactMetrics: textToMetrics(impactMetricsText),
         coverImageUrl: coverImageUrl || undefined,
-        detailsHtml,
+        detailsHtml: currentDetailsHtml,
         externalLinks: textToLinks(linksText),
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         highlighted,
+        cleanupRemovedS3Images,
       })
 
       setEntries((previous) =>
@@ -488,51 +704,139 @@ export default function AdminPortfolio() {
 
               <div className="grid gap-2">
                 <span className="text-sm text-slate-700">Contenu riche</span>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-                    onClick={() => runCommand('bold')}
-                  >
-                    Gras
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-                    onClick={() => runCommand('italic')}
-                  >
-                    Italique
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-                    onClick={() => runCommand('insertUnorderedList')}
-                  >
-                    Liste
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-                    onClick={addLink}
-                  >
-                    Lien
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-                    onClick={triggerS3ImagePicker}
-                    disabled={uploadingImage}
-                  >
-                    {uploadingImage ? 'Upload image...' : 'Image S3'}
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-                    onClick={addExternalImage}
-                  >
-                    Image externe + credit
-                  </button>
+                <div className="grid gap-2 rounded-xl border border-slate-300 bg-slate-50 p-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                      <ToolbarButton
+                        label="Gras"
+                        icon={Bold}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => runCommand('bold')}
+                      />
+                      <ToolbarButton
+                        label="Italique"
+                        icon={Italic}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => runCommand('italic')}
+                      />
+                      <ToolbarButton
+                        label="Souligne"
+                        icon={Underline}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => runCommand('underline')}
+                      />
+                      <ToolbarButton
+                        label="Lien"
+                        icon={Link2}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={addLink}
+                      />
+                      <ToolbarButton
+                        label="Nettoyer format"
+                        icon={Eraser}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={clearFormatting}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                      <ToolbarButton
+                        label="Liste a puces"
+                        icon={List}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => runCommand('insertUnorderedList')}
+                      />
+                      <ToolbarButton
+                        label="Liste numerotee"
+                        icon={ListOrdered}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => runCommand('insertOrderedList')}
+                      />
+                      <ToolbarButton
+                        label="Titre H2"
+                        icon={Heading2}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => setParagraphFormat('h2')}
+                      />
+                      <ToolbarButton
+                        label="Titre H3"
+                        icon={Heading3}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => setParagraphFormat('h3')}
+                      />
+                      <ToolbarButton
+                        label="Paragraphe"
+                        icon={Pilcrow}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => setParagraphFormat('p')}
+                      />
+                      <ToolbarButton
+                        label="Citation"
+                        icon={Quote}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => setParagraphFormat('blockquote')}
+                      />
+                      <ToolbarButton
+                        label="Bloc code"
+                        icon={Code2}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => setParagraphFormat('pre')}
+                      />
+                      <ToolbarButton
+                        label="Separateur horizontal"
+                        icon={Minus}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={insertHorizontalRule}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                      <ToolbarButton
+                        label="Annuler"
+                        icon={Undo2}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => runCommand('undo')}
+                      />
+                      <ToolbarButton
+                        label="Retablir"
+                        icon={Redo2}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={() => runCommand('redo')}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                      <ToolbarButton
+                        label={uploadingImage ? 'Upload S3 en cours' : 'Uploader une image sur S3'}
+                        icon={uploadingImage ? LoaderCircle : Upload}
+                        iconClassName={uploadingImage ? 'h-4 w-4 animate-spin' : 'h-4 w-4'}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={triggerS3ImagePicker}
+                        disabled={uploadingImage}
+                      />
+                      <ToolbarButton
+                        label="Bibliotheque d images S3"
+                        icon={FolderOpen}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={openS3Library}
+                      />
+                      <ToolbarButton
+                        label="Inserer image externe avec credit"
+                        icon={ImagePlus}
+                        onMouseDown={preventToolbarMouseDown}
+                        onClick={addExternalImage}
+                      />
+                    </div>
+                  </div>
                 </div>
+                <label className="flex items-center gap-2 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={cleanupRemovedS3Images}
+                    onChange={onCleanupRemovedS3ImagesChange}
+                  />
+                  Supprimer automatiquement les images S3 retirees du contenu
+                </label>
                 <input
                   ref={imageInputRef}
                   type="file"
@@ -544,8 +848,16 @@ export default function AdminPortfolio() {
                   ref={editorRef}
                   contentEditable
                   suppressContentEditableWarning
-                  onInput={(event) => setDetailsHtml((event.target as HTMLDivElement).innerHTML)}
-                  className="min-h-[260px] rounded-xl border border-slate-300 px-3 py-2"
+                  onFocus={focusEditor}
+                  onInput={onEditorInput}
+                  onBlur={onEditorBlur}
+                  onKeyUp={onEditorKeyUp}
+                  onMouseUp={onEditorMouseUp}
+                  onPaste={onEditorPaste}
+                  onKeyDown={onEditorKeyDown}
+                  onDrop={onEditorDrop}
+                  onDragOver={onEditorDragOver}
+                  className="min-h-[320px] rounded-xl border border-slate-300 px-3 py-2"
                 />
               </div>
 
@@ -665,7 +977,116 @@ export default function AdminPortfolio() {
           </div>
         </div>
       ) : null}
+
+      {s3LibraryOpen ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4">
+          <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-slate-900">Bibliotheque S3</h2>
+            <form className="mt-4 flex flex-wrap items-end gap-2" onSubmit={onS3LibrarySubmit}>
+              <label className="grid min-w-[280px] flex-1 gap-1">
+                <span className="text-sm text-slate-700">Prefixe</span>
+                <input
+                  className="rounded-xl border border-slate-300 px-3 py-2"
+                  value={s3LibraryPrefix}
+                  onChange={(event) => onS3LibraryPrefixChange(event.target.value)}
+                  placeholder="portfolio/mon-projet/"
+                  disabled={s3LibraryLoading}
+                />
+              </label>
+              <button
+                type="submit"
+                className="rounded-full border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                disabled={s3LibraryLoading}
+              >
+                Recharger
+              </button>
+              <button
+                type="button"
+                onClick={closeS3Library}
+                className="rounded-full border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              >
+                Fermer
+              </button>
+            </form>
+
+            {s3LibraryLoading ? (
+              <p className="mt-3 text-sm text-slate-600">Chargement des images S3...</p>
+            ) : null}
+            {s3LibraryError ? <p className="mt-3 text-sm text-rose-700">{s3LibraryError}</p> : null}
+            {!s3LibraryLoading && s3LibraryFiles.length === 0 && !s3LibraryError ? (
+              <p className="mt-3 text-sm text-slate-600">Aucune image trouvee.</p>
+            ) : null}
+
+            {s3LibraryFiles.length > 0 ? (
+              <div className="mt-3 max-h-[420px] overflow-auto rounded-xl border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium text-slate-700">Image</th>
+                      <th className="px-3 py-2 text-left font-medium text-slate-700">Date</th>
+                      <th className="px-3 py-2 text-left font-medium text-slate-700">Taille</th>
+                      <th className="px-3 py-2 text-right font-medium text-slate-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {s3LibraryFiles.map((file) => (
+                      <tr key={file.key} className="align-middle">
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={file.url}
+                              alt={file.key.split('/').pop() || file.key}
+                              className="h-12 w-12 rounded object-cover"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-slate-900">{file.key}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600">{formatS3FileDate(file.lastModified)}</td>
+                        <td className="px-3 py-2 text-slate-600">{formatS3FileSize(file.size)}</td>
+                        <td className="px-3 py-2 text-right">
+                          <button
+                            type="button"
+                            className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                            onClick={() => insertExistingS3Image(file)}
+                          >
+                            Inserer
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </AdminShell>
+  )
+}
+
+function ToolbarButton({
+  label,
+  icon: Icon,
+  onMouseDown,
+  onClick,
+  disabled,
+  iconClassName,
+}: ToolbarButtonProps) {
+  return (
+    <button
+      type="button"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+      title={label}
+      aria-label={label}
+      onMouseDown={onMouseDown}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      <Icon className={iconClassName || 'h-4 w-4'} />
+    </button>
   )
 }
 
@@ -700,6 +1121,14 @@ function escapeHtmlText(value: string): string {
 
 function sanitizeKeySegment(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9/_-]+/g, '-')
+}
+
+function normalizePrefix(prefix: string): string {
+  const normalized = prefix.trim().replace(/\\/g, '/').replace(/^\/+/, '')
+  if (!normalized) {
+    return ''
+  }
+  return normalized.endsWith('/') ? normalized : `${normalized}/`
 }
 
 function isHttpUrl(value: string): boolean {

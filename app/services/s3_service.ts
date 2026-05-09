@@ -119,6 +119,36 @@ export async function deleteFromS3(objectKey: string) {
   await client.removeObject(env.get('S3_BUCKET'), sanitizeObjectKey(objectKey))
 }
 
+export function extractS3ObjectKeyFromUrl(url: string): string | null {
+  const value = url.trim()
+  if (!value) {
+    return null
+  }
+
+  try {
+    const objectUrl = new URL(value)
+    const publicBase = new URL(env.get('S3_PUBLIC_URL'))
+    const bucketPrefix = `/${env.get('S3_BUCKET')}/`
+
+    if (objectUrl.origin !== publicBase.origin) {
+      return null
+    }
+
+    if (!objectUrl.pathname.startsWith(bucketPrefix)) {
+      return null
+    }
+
+    const encodedKey = objectUrl.pathname.slice(bucketPrefix.length)
+    if (!encodedKey) {
+      return null
+    }
+
+    return sanitizeObjectKey(decodePath(encodedKey))
+  } catch {
+    return null
+  }
+}
+
 export function buildStorageKey(prefix: string | undefined, fileName: string): string {
   const cleanPrefix = sanitizeObjectKey(prefix || '').replace(/\/+$/, '')
   const cleanName = sanitizeObjectKey(fileName)
@@ -190,5 +220,18 @@ function encodePath(value: string): string {
   return value
     .split('/')
     .map((segment) => encodeURIComponent(segment))
+    .join('/')
+}
+
+function decodePath(value: string): string {
+  return value
+    .split('/')
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment)
+      } catch {
+        return segment
+      }
+    })
     .join('/')
 }

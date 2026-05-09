@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { sql } from '#services/db_service'
+import { deleteFromS3, extractS3ObjectKeyFromUrl } from '#services/s3_service'
 import { updatePortfolioEntryValidator } from '#validators/portfolio_entry_validator'
 
 const journey = {
@@ -178,6 +179,25 @@ export default class PortfolioController {
 
   async adminUpdate({ request, response, params }: HttpContext) {
     const payload = await request.validateUsing(updatePortfolioEntryValidator)
+    const entryId = Number(params.id)
+    if (!Number.isFinite(entryId) || entryId <= 0) {
+      return response.badRequest({ message: 'ID de fiche invalide.' })
+    }
+
+    const currentResult = await sql<Pick<PortfolioRow, 'id' | 'cover_image_url' | 'details_html'>>(
+      `
+      select id, cover_image_url, details_html
+      from portfolio_entries
+      where id = $1
+      limit 1
+      `,
+      [entryId]
+    )
+    const currentRow = currentResult.rows[0]
+
+    if (!currentRow) {
+      return response.notFound({ message: 'Fiche portfolio introuvable' })
+    }
 
     const updates: string[] = []
     const values: unknown[] = []
@@ -252,7 +272,7 @@ export default class PortfolioController {
       return response.badRequest({ message: 'Aucune modification a appliquer.' })
     }
 
-    values.push(Number(params.id))
+    values.push(entryId)
 
     try {
       const result = await sql<PortfolioRow>(
@@ -283,6 +303,14 @@ export default class PortfolioController {
 
       if (!row) {
         return response.notFound({ message: 'Fiche portfolio introuvable' })
+      }
+
+      if (payload.cleanupRemovedS3Images) {
+        try {
+          await cleanupRemovedPortfolioS3Assets(entryId, currentRow, row)
+        } catch {
+          // Ne bloque pas la sauvegarde si le nettoyage S3 echoue.
+        }
       }
 
       return response.ok({ entry: mapPortfolioRow(row) })
@@ -336,6 +364,85 @@ function mapPortfolioRow(row: PortfolioRow) {
     endDate: row.end_date,
     highlighted: row.highlighted,
   }
+}
+
+async function cleanupRemovedPortfolioS3Assets(
+  entryId: number,
+  previous: Pick<PortfolioRow, 'cover_image_url' | 'details_html'>,
+  next: Pick<PortfolioRow, 'cover_image_url' | 'details_html'>
+) {
+  const previousKeys = extractPortfolioS3Keys(previous.cover_image_url, previous.details_html)
+  const nextKeys = extractPortfolioS3Keys(next.cover_image_url, next.details_html)
+  const removedKeys = [...previousKeys].filter((key) => !nextKeys.has(key))
+
+  if (removedKeys.length === 0) {
+    return
+  }
+
+  const usedElsewhere = await collectPortfolioS3KeysFromOtherEntries(entryId)
+  const deletableKeys = removedKeys.filter((key) => !usedElsewhere.has(key))
+
+  if (deletableKeys.length === 0) {
+    return
+  }
+
+  await Promise.allSettled(deletableKeys.map((key) => deleteFromS3(key)))
+}
+
+async function collectPortfolioS3KeysFromOtherEntries(entryId: number): Promise<Set<string>> {
+  const result = await sql<Pick<PortfolioRow, 'cover_image_url' | 'details_html'>>(
+    `
+    select cover_image_url, details_html
+    from portfolio_entries
+    where id <> $1
+    `,
+    [entryId]
+  )
+
+  const keys = new Set<string>()
+
+  for (const row of result.rows) {
+    appendPortfolioS3KeyFromUrl(keys, row.cover_image_url)
+    for (const url of extractImageUrlsFromHtml(row.details_html || '')) {
+      appendPortfolioS3KeyFromUrl(keys, url)
+    }
+  }
+
+  return keys
+}
+
+function extractPortfolioS3Keys(coverImageUrl: string | null, detailsHtml: string | null): Set<string> {
+  const keys = new Set<string>()
+  appendPortfolioS3KeyFromUrl(keys, coverImageUrl)
+
+  for (const url of extractImageUrlsFromHtml(detailsHtml || '')) {
+    appendPortfolioS3KeyFromUrl(keys, url)
+  }
+
+  return keys
+}
+
+function appendPortfolioS3KeyFromUrl(keys: Set<string>, maybeUrl: string | null) {
+  if (!maybeUrl) return
+  const key = extractS3ObjectKeyFromUrl(maybeUrl)
+  if (!key || !key.startsWith('portfolio/')) return
+  keys.add(key)
+}
+
+function extractImageUrlsFromHtml(html: string): string[] {
+  const urls: string[] = []
+  const regex = /<img\b[^>]*\bsrc=(['"])(.*?)\1/gi
+  let match: RegExpExecArray | null = regex.exec(html)
+
+  while (match) {
+    const src = match[2]?.trim()
+    if (src) {
+      urls.push(src)
+    }
+    match = regex.exec(html)
+  }
+
+  return urls
 }
 
 function slugify(value: string): string {

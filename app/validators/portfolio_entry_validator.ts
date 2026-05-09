@@ -22,5 +22,6 @@ export const updatePortfolioEntryValidator = vine.compile(
     startDate: vine.string().trim().maxLength(32).optional(),
     endDate: vine.string().trim().maxLength(32).optional(),
     highlighted: vine.boolean().optional(),
+    cleanupRemovedS3Images: vine.boolean().optional(),
   })
 )
